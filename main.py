@@ -14,9 +14,9 @@ if __name__ == '__main__':
     Helper.plot_sample_images(df=dataset, show_only=False)
 
     # Optional, do the "LongList"
-    # long = MTTLongList(dataset)
-    # long.train_list(fraction=0.10, epochs=10, show_only=False)
+    long = MTTLongList(dataset)
+    long.train_list(fraction=0.10, epochs=10, show_only=False)
 
     # Train the Top X "ShortList"
-    short = MTTShort(dataset)
-    short.train_list(epochs=1, show_only=False)
+    # short = MTTShort(dataset)
+    # short.train_list(epochs=1, show_only=False)
