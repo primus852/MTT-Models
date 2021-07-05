@@ -241,13 +241,13 @@ class Helper:
             shuffle=True,
             seed=0,
             subset='training',
-            #         rotation_range=30, # Uncomment to use data augmentation
-            #         zoom_range=0.15,
-            #         width_shift_range=0.2,
-            #         height_shift_range=0.2,
-            #         shear_range=0.15,
-            #         horizontal_flip=True,
-            #         fill_mode="nearest"
+            rotation_range=30,  # Uncomment to use data augmentation
+            zoom_range=0.15,
+            width_shift_range=0.2,
+            height_shift_range=0.2,
+            shear_range=0.15,
+            horizontal_flip=True,
+            fill_mode="nearest"
         )
 
         val_images = train_generator.flow_from_dataframe(
@@ -261,13 +261,13 @@ class Helper:
             shuffle=True,
             seed=0,
             subset='validation',
-            #         rotation_range=30, # Uncomment to use data augmentation
-            #         zoom_range=0.15,
-            #         width_shift_range=0.2,
-            #         height_shift_range=0.2,
-            #         shear_range=0.15,
-            #         horizontal_flip=True,
-            #         fill_mode="nearest"
+            rotation_range=30,  # Uncomment to use data augmentation
+            zoom_range=0.15,
+            width_shift_range=0.2,
+            height_shift_range=0.2,
+            shear_range=0.15,
+            horizontal_flip=True,
+            fill_mode="nearest"
         )
 
         test_images = test_generator.flow_from_dataframe(
