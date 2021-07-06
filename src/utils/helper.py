@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 from typing import Tuple, List
+from .download import Downloader
 
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -8,23 +9,61 @@ import seaborn as sns
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix
+import zipfile
 
 
 class Helper:
     RESULT_FOLDER: str = 'results'
     PLOT_FOLDER: str = 'plots'
     MODEL_FOLDER: str = 'models'
+    OPENCV_FOLDER: str = 'video'
     DATASET_FOLDER: str = 'data'
+    DATASET_GDRIVE_ID: str = '1batvXHflZy72ACJPnRfp5rxYkcRZosvY'
+    DATASET_GDRIVE_NAME: str = 'asl.zip'
 
     @staticmethod
-    def _get_project_root() -> Path:
+    def get_project_root() -> Path:
         return Path(__file__).parent.parent.parent
+
+    @staticmethod
+    def check_dataset():
+
+        # Dataset Folder
+        data_path = str(Helper.get_project_root() / Helper.DATASET_FOLDER)
+
+        if not Path(data_path).is_dir():
+
+            try:
+                os.mkdir(data_path)
+            except OSError:
+                print("Creation of the directory %s failed" % data_path)
+
+            print('### DATASET NOT FOUND ###')
+            full_path = str(Helper.get_project_root() / Helper.DATASET_FOLDER / Helper.DATASET_GDRIVE_NAME)
+            print('Downloading, to {}, please be patient...'.format(full_path))
+
+            Downloader.download_file_from_google_drive(Helper.DATASET_GDRIVE_ID, full_path)
+
+            print('Download completed, unzipping...')
+
+            with zipfile.ZipFile(
+                    str(Path(Helper.get_project_root() / Helper.DATASET_FOLDER / Helper.DATASET_GDRIVE_NAME)),
+                    'r') as zip_ref:
+                zip_ref.extractall(str(Path(Helper.get_project_root() / Helper.DATASET_FOLDER)))
+
+            print('Dataset unzipped, continuing...')
+
+            # Unlink the Zip
+            os.remove(str(Path(Helper.get_project_root() / Helper.DATASET_FOLDER / Helper.DATASET_GDRIVE_NAME)))
+
+        else:
+            print('### DATASET FOUND ###')
 
     @staticmethod
     def create_needed_folders() -> Tuple[str, str]:
 
         # Training Folder
-        result_path = str(Helper._get_project_root() / Helper.RESULT_FOLDER)
+        result_path = str(Helper.get_project_root() / Helper.RESULT_FOLDER)
         if not Path(result_path).is_dir():
             try:
                 os.mkdir(result_path)
@@ -32,7 +71,7 @@ class Helper:
                 print("Creation of the directory %s failed" % result_path)
 
         # Plot Folder
-        plot_path = str(Helper._get_project_root() / Helper.RESULT_FOLDER / Helper.PLOT_FOLDER)
+        plot_path = str(Helper.get_project_root() / Helper.RESULT_FOLDER / Helper.PLOT_FOLDER)
         if not Path(plot_path).is_dir():
             try:
                 os.mkdir(plot_path)
@@ -40,18 +79,26 @@ class Helper:
                 print("Creation of the directory %s failed" % plot_path)
 
         # Model Folder
-        model_path = str(Helper._get_project_root() / Helper.RESULT_FOLDER / Helper.MODEL_FOLDER)
+        model_path = str(Helper.get_project_root() / Helper.RESULT_FOLDER / Helper.MODEL_FOLDER)
         if not Path(model_path).is_dir():
             try:
                 os.mkdir(model_path)
             except OSError:
                 print("Creation of the directory %s failed" % model_path)
 
+        # OpenCV Folder
+        opencv_path = str(Helper.get_project_root() / Helper.RESULT_FOLDER / Helper.OPENCV_FOLDER)
+        if not Path(opencv_path).is_dir():
+            try:
+                os.mkdir(opencv_path)
+            except OSError:
+                print("Creation of the directory %s failed" % opencv_path)
+
         return result_path, plot_path
 
     @staticmethod
     def create_model_checkpoints_folder(modelname: str) -> str:
-        model_path = str(Helper._get_project_root() / Helper.RESULT_FOLDER / Helper.MODEL_FOLDER / modelname)
+        model_path = str(Helper.get_project_root() / Helper.RESULT_FOLDER / Helper.MODEL_FOLDER / modelname)
         if not Path(model_path).is_dir():
             try:
                 os.mkdir(model_path)
@@ -66,7 +113,7 @@ class Helper:
         Load the raw data
         :return:
         """
-        path = list((Helper._get_project_root() / Helper.DATASET_FOLDER / 'asl_alphabet_train').rglob('**/*.jpg'))
+        path = list((Helper.get_project_root() / Helper.DATASET_FOLDER / 'asl_alphabet_train').rglob('**/*.jpg'))
         files = [x for x in path if x.is_file()]
 
         labels = [str(files[i]).split("\\")[-2] for i in range(len(files))]
@@ -81,7 +128,7 @@ class Helper:
         df = df.sample(frac=1).reset_index(drop=True)
 
         # Create Labels .txt
-        class_file = str(Helper._get_project_root() / Helper.RESULT_FOLDER / Helper.MODEL_FOLDER / 'classes.txt')
+        class_file = str(Helper.get_project_root() / Helper.RESULT_FOLDER / Helper.MODEL_FOLDER / 'classes.txt')
         with open(class_file, 'w') as f:
             for c in df.Label.unique():
                 f.write(c + '\n')
@@ -89,7 +136,7 @@ class Helper:
         return df
 
     @staticmethod
-    def plot_loss_val_accuracy_comparison(df: pd.DataFrame, model_name: str, show_only: bool) -> None:
+    def plot_loss_val_accuracy_comparison(df: pd.DataFrame, model_name: str) -> None:
 
         fig, axes = plt.subplots(2, 1, figsize=(15, 10))
         ax = axes.flat
@@ -101,15 +148,12 @@ class Helper:
         pd.DataFrame(df.history)[['loss', 'val_loss']].plot(ax=ax[1])
         ax[1].set_title("Loss", fontsize=15)
 
-        if show_only:
-            plt.show()
-        else:
-            plt.savefig(
-                str(Helper._get_project_root() / Helper.RESULT_FOLDER / Helper.PLOT_FOLDER / 'compare_{}.png'.format(
-                    model_name)))
+        plt.savefig(
+            str(Helper.get_project_root() / Helper.RESULT_FOLDER / Helper.PLOT_FOLDER / 'compare_{}.png'.format(
+                model_name)))
 
     @staticmethod
-    def plot_prediction_sample(test_df: pd.DataFrame, pred: List, model_name: str, show_only: bool) -> None:
+    def plot_prediction_sample(test_df: pd.DataFrame, pred: List, model_name: str) -> None:
 
         fig, axes = plt.subplots(nrows=4, ncols=6, figsize=(20, 12),
                                  subplot_kw={'xticks': [], 'yticks': []})
@@ -120,15 +164,12 @@ class Helper:
                          fontsize=15)
         plt.tight_layout()
 
-        if show_only:
-            plt.show()
-        else:
-            plt.savefig(
-                str(Helper._get_project_root() / Helper.RESULT_FOLDER / Helper.PLOT_FOLDER / 'sample_predictions_{}.png'
-                    .format(model_name)))
+        plt.savefig(
+            str(Helper.get_project_root() / Helper.RESULT_FOLDER / Helper.PLOT_FOLDER / 'sample_predictions_{}.png'.format(
+                model_name)))
 
     @staticmethod
-    def plot_confusion_matrix(y_test: List, pred: List, model_name: str, show_only: bool) -> None:
+    def plot_confusion_matrix(y_test: List, pred: List, model_name: str) -> None:
         cf_matrix = confusion_matrix(y_test, pred, normalize='true')
         plt.figure(figsize=(17, 12))
         sns.heatmap(cf_matrix, annot=True, xticklabels=sorted(set(y_test)), yticklabels=sorted(set(y_test)), cbar=False)
@@ -136,15 +177,12 @@ class Helper:
         plt.xticks(fontsize=12, rotation=45)
         plt.yticks(fontsize=12)
 
-        if show_only:
-            plt.show()
-        else:
-            plt.savefig(
-                str(Helper._get_project_root() / Helper.RESULT_FOLDER / Helper.PLOT_FOLDER / 'confusion_matrix_{}.png'.format(
-                    model_name)))
+        plt.savefig(
+            str(Helper.get_project_root() / Helper.RESULT_FOLDER / Helper.PLOT_FOLDER / 'confusion_matrix_{}.png'.format(
+                model_name)))
 
     @staticmethod
-    def plot_sample_distribution(df: pd.DataFrame, show_only: bool) -> None:
+    def plot_sample_distribution(df: pd.DataFrame) -> None:
         """
         Plot distribution of Training Data
         :return:
@@ -155,14 +193,10 @@ class Helper:
         plt.figure(figsize=(20, 5))
         sns.barplot(x=sorted(vc.index), y=vc, palette="rocket")
         plt.title("Number of pictures of each category", fontsize=15)
-        if show_only:
-            plt.show()
-        else:
-            plt.savefig(
-                str(Helper._get_project_root() / Helper.RESULT_FOLDER / Helper.PLOT_FOLDER / 'distribution.png'))
+        plt.savefig(str(Helper.get_project_root() / Helper.RESULT_FOLDER / Helper.PLOT_FOLDER / 'distribution.png'))
 
     @staticmethod
-    def plot_long_accuracy(df: pd.DataFrame, epochs: int, show_only: bool) -> None:
+    def plot_long_accuracy(df: pd.DataFrame, epochs: int) -> None:
         plt.figure(figsize=(15, 5))
         sns.barplot(x='model', y='val_accuracy', data=df)
         plt.title('Accuracy on the test set (after {} epoch))'.format(epochs), fontsize=15)
@@ -170,28 +204,22 @@ class Helper:
         plt.xticks(rotation=45)
         plt.tight_layout()
 
-        if show_only:
-            plt.show()
-        else:
-            plt.savefig(
-                str(Helper._get_project_root() / Helper.RESULT_FOLDER / Helper.PLOT_FOLDER / 'long_val_accuracy.png'))
+        plt.savefig(
+            str(Helper.get_project_root() / Helper.RESULT_FOLDER / Helper.PLOT_FOLDER / 'long_val_accuracy.png'))
 
     @staticmethod
-    def plot_long_training_time(df: pd.DataFrame, show_only: bool) -> None:
+    def plot_long_training_time(df: pd.DataFrame) -> None:
         plt.figure(figsize=(15, 5))
         sns.barplot(x='model', y='Training time (sec)', data=df)
         plt.title('Training time for each model in sec', fontsize=15)
         plt.xticks(rotation=45)
         plt.tight_layout()
 
-        if show_only:
-            plt.show()
-        else:
-            plt.savefig(
-                str(Helper._get_project_root() / Helper.RESULT_FOLDER / Helper.PLOT_FOLDER / 'long_training_time.png'))
+        plt.savefig(
+            str(Helper.get_project_root() / Helper.RESULT_FOLDER / Helper.PLOT_FOLDER / 'long_training_time.png'))
 
     @staticmethod
-    def plot_sample_images(df: pd.DataFrame, show_only: bool) -> None:
+    def plot_sample_images(df: pd.DataFrame) -> None:
         """
         Plot a sample fo Images
         @TODO: Avoid duplicates (possibly with load_training_folder())
@@ -207,10 +235,7 @@ class Helper:
             ax.set_title(df.Label[i], fontsize=15)
         plt.tight_layout(pad=0.5)
 
-        if show_only:
-            plt.show()
-        else:
-            plt.savefig(str(Helper._get_project_root() / Helper.RESULT_FOLDER / Helper.PLOT_FOLDER / 'samples.png'))
+        plt.savefig(str(Helper.get_project_root() / Helper.RESULT_FOLDER / Helper.PLOT_FOLDER / 'samples.png'))
 
     @staticmethod
     def create_generator(df_train: pd.DataFrame, df_test: pd.DataFrame):

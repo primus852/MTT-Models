@@ -34,6 +34,5 @@ class MTTModel:
 
     # Chosen by the Training of the "LongList"
     top_models = {
-        "DenseNet121": {"model": tf.keras.applications.DenseNet121, "perf": 0},
-        "VGG19": {"model": tf.keras.applications.VGG19, "perf": 0},
+        "MobileNet": {"model": tf.keras.applications.MobileNet, "perf": 0},
     }

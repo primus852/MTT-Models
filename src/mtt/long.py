@@ -9,7 +9,7 @@ class MTTLongList:
     def __init__(self, df: pd.DataFrame) -> None:
         self.df = df
 
-    def train_list(self, fraction: float, epochs: int, show_only: bool) -> None:
+    def train_list(self, fraction: float, epochs: int) -> None:
         train_df, test_df = Helper.split_data(self.df, fraction)
 
         train_gen, test_gen, train_img, val_img, test_img = Helper.create_generator(train_df, test_df)
@@ -45,7 +45,7 @@ class MTTLongList:
         df_results.reset_index(inplace=True, drop=True)
 
         # Plot Accuracy
-        Helper.plot_long_accuracy(df_results, epochs, show_only)
+        Helper.plot_long_accuracy(df_results, epochs)
 
         # Plot Training Time
-        Helper.plot_long_training_time(df_results, show_only)
+        Helper.plot_long_training_time(df_results)
