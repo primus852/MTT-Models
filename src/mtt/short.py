@@ -15,7 +15,7 @@ class MTTShort:
         self.df = df
 
     def train_list(self, epochs: int) -> None:
-        train_df, test_df = Helper.split_data(self.df, 0.01)
+        train_df, test_df = Helper.split_data(self.df)
 
         train_gen, test_gen, train_img, val_img, test_img = Helper.create_generator(train_df, test_df)
 
