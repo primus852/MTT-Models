@@ -23,7 +23,7 @@ class MTTShort:
         for name, model in MTTModel.top_models.items():
             # Create Model folder
             now = datetime.now()
-            model_name = '{}_{}'.format(name, now.strftime("%d-%m-%Y_%H_%M_%S"))
+            model_name = '{}_{}_epochs_{}'.format(name, epochs, now.strftime("%d-%m-%Y_%H_%M_%S"))
             checkpoint_path = Helper.create_model_checkpoints_folder(model_name)
 
             # Get the model
