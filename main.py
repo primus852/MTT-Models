@@ -2,6 +2,7 @@ from src import Helper
 from src import MTTLongList
 from src import MTTShort
 from src import OpenCVStream
+from src import Prediction
 import argparse
 
 parser = argparse.ArgumentParser(description='Customize the training.')
@@ -33,15 +34,23 @@ if __name__ == '__main__':
     # Create the folder to hold the results and plots
     result_folder, plot_folder = Helper.create_needed_folders()
 
+    # Check if the dataset exists
+    Helper.check_dataset()
+
+    # Load the raw Data
+    dataset = Helper.load_training_folder()
+
     if args.production:
-        ocv = OpenCVStream('MobileNet_06-07-2021_18_03_11')
+        # ocv = OpenCVStream('MobileNet_06-07-2021_18_03_11')
+        pred = Prediction()
+
+        # Plot the times for the Short Model
+        pred.plot_times()
+
+        predictions = pred.make_predictions(dataset)
+
 
     else:
-        # Check if the dataset exists
-        Helper.check_dataset()
-
-        # Load the raw Data
-        dataset = Helper.load_training_folder()
 
         # Optional, save/output a some Plots
         if not args.skip_analysis:

@@ -16,6 +16,7 @@ class Helper:
     RESULT_FOLDER: str = 'results'
     PLOT_FOLDER: str = 'plots'
     MODEL_FOLDER: str = 'models'
+    CSV_FOLDER: str = 'csv'
     OPENCV_FOLDER: str = 'video'
     DATASET_FOLDER: str = 'data'
     DATASET_GDRIVE_ID: str = '1batvXHflZy72ACJPnRfp5rxYkcRZosvY'
@@ -85,6 +86,14 @@ class Helper:
                 os.mkdir(model_path)
             except OSError:
                 print("Creation of the directory %s failed" % model_path)
+
+        # CSV Folder
+        csv_path = str(Helper.get_project_root() / Helper.RESULT_FOLDER / Helper.CSV_FOLDER)
+        if not Path(csv_path).is_dir():
+            try:
+                os.mkdir(csv_path)
+            except OSError:
+                print("Creation of the directory %s failed" % csv_path)
 
         # OpenCV Folder
         opencv_path = str(Helper.get_project_root() / Helper.RESULT_FOLDER / Helper.OPENCV_FOLDER)
