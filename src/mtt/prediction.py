@@ -72,6 +72,8 @@ class Prediction:
 
             # Create a new dict for the model with the prediction time as the value
             times.append({'Model': model_name, 'Avg. Prediction Time': prediction_time})
+            print('Model' + model_name + ', avg. prediction Time was ' + str(prediction_time) + ' on ' + str(
+                prediction_time) + ' images')
 
             index += 1
 

@@ -48,10 +48,7 @@ if __name__ == '__main__':
         pred.plot_times()
 
         predictions = pred.make_predictions(dataset)
-
-
     else:
-
         # Optional, save/output a some Plots
         if not args.skip_analysis:
             Helper.plot_sample_distribution(df=dataset)

@@ -27,6 +27,10 @@ class MTTShort:
         for name, model in MTTModel.top_models.items():
             # Create Model folder
             now = datetime.now()
+
+            # Model Train Timer
+            start_model = time.time()
+
             model_name = '{}_{}_epochs_{}'.format(name, epochs, now.strftime("%d-%m-%Y_%H_%M_%S"))
             checkpoint_path = Helper.create_model_checkpoints_folder(model_name)
 
@@ -52,6 +56,11 @@ class MTTShort:
                             validation_data=val_img,
                             epochs=epochs,
                             callbacks=[cp_callback, tensorboard_callback, early_stopping_callback])
+
+            # Model Train Timer
+            end_model = time.time()
+
+            model_time = (end_model - start_model)
 
             m.save('results/models/saved_' + model_name)
 
@@ -82,7 +91,9 @@ class MTTShort:
             acc = accuracy_score(y_test, pred)
 
             # Display the results
-            print(f'## Best Model: {name} with {acc * 100:.2f}% accuracy on the test set')
+            size = len(history.history['val_loss'])
+            print(
+                f'## Best Model: {name} with {acc * 100:.2f}% accuracy on the test set, stopped after {size} epochs, trained for {model_time} seconds')
 
             # Create a new dict for the model with the prediction time as the value
             times.append({'model': model_name, 'avg': prediction_time, 'acc': acc})

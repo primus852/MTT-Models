@@ -18,9 +18,14 @@ class Helper:
     MODEL_FOLDER: str = 'models'
     CSV_FOLDER: str = 'csv'
     OPENCV_FOLDER: str = 'video'
+
     DATASET_FOLDER: str = 'data'
     DATASET_GDRIVE_ID: str = '1batvXHflZy72ACJPnRfp5rxYkcRZosvY'
     DATASET_GDRIVE_NAME: str = 'asl.zip'
+
+    TARGET_FOLDER: str = 'targets'
+    TARGET_GDRIVE_NAME: str = 'target.zip'
+    TARGET_GDRIVE_ID: str = '1vZYFBbondn3jdL1Ba3wtd4qWCPTQtbXL'
 
     @staticmethod
     def get_project_root() -> Path:
@@ -56,6 +61,37 @@ class Helper:
 
             # Unlink the Zip
             os.remove(str(Path(Helper.get_project_root() / Helper.DATASET_FOLDER / Helper.DATASET_GDRIVE_NAME)))
+
+        else:
+            print('### DATASET FOUND ###')
+
+        # Target Dataset Folder (turkish only)
+        target_path = str(Helper.get_project_root() / Helper.TARGET_FOLDER)
+
+        if not Path(target_path).is_dir():
+
+            try:
+                os.mkdir(target_path)
+            except OSError:
+                print("Creation of the directory %s failed" % target_path)
+
+            print('### TARGET DATASET NOT FOUND ###')
+            full_path = str(Helper.get_project_root() / Helper.TARGET_FOLDER / Helper.TARGET_GDRIVE_NAME)
+            print('Downloading, to {}, please be patient...'.format(full_path))
+
+            Downloader.download_file_from_google_drive(Helper.TARGET_GDRIVE_ID, full_path)
+
+            print('Download completed, unzipping...')
+
+            with zipfile.ZipFile(
+                    str(Path(Helper.get_project_root() / Helper.TARGET_FOLDER / Helper.TARGET_GDRIVE_NAME)),
+                    'r') as zip_ref:
+                zip_ref.extractall(str(Path(Helper.get_project_root() / Helper.TARGET_FOLDER)))
+
+            print('Dataset unzipped, continuing...')
+
+            # Unlink the Zip
+            os.remove(str(Path(Helper.get_project_root() / Helper.TARGET_FOLDER / Helper.TARGET_GDRIVE_NAME)))
 
         else:
             print('### DATASET FOUND ###')
@@ -151,15 +187,37 @@ class Helper:
         ax = axes.flat
 
         pd.DataFrame(df.history)[['accuracy', 'val_accuracy']].plot(ax=ax[0])
-        ax[0].set_title("Accuracy", fontsize=15)
+        ax[0].set_title("Accuracy", fontsize=30)
         ax[0].set_ylim(0, 1.1)
 
         pd.DataFrame(df.history)[['loss', 'val_loss']].plot(ax=ax[1])
-        ax[1].set_title("Loss", fontsize=15)
+        ax[1].set_title("Loss", fontsize=30)
 
         plt.savefig(
             str(Helper.get_project_root() / Helper.RESULT_FOLDER / Helper.PLOT_FOLDER / 'compare_{}.png'.format(
                 model_name)))
+
+    @staticmethod
+    def translate_prediction(source, target_lang, prediction):
+
+        fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(20, 12), subplot_kw={'xticks': [], 'yticks': []})
+
+        for i, ax in enumerate(axes.flat):
+            if i == 0:
+                ax.imshow(plt.imread(
+                    str(Helper.get_project_root() / Helper.DATASET_FOLDER / 'asl_alphabet_train' / 'asl_alphabet_train' / source / '{}1.jpg'.format(
+                        source))))
+                ax.set_title('ASL: {}'.format(source),fontsize=30)
+            else:
+                ax.imshow(plt.imread(
+                    str(Helper.get_project_root() / Helper.TARGET_FOLDER / target_lang / '{}.png'.format(prediction))))
+                ax.set_title('TSL: {}'.format(prediction), fontsize=30)
+
+        plt.tight_layout()
+
+        plt.savefig(
+            str(Helper.get_project_root() / Helper.RESULT_FOLDER / Helper.PLOT_FOLDER / 'sample_translate_{}_{}.png'.format(
+                prediction, target_lang)))
 
     @staticmethod
     def plot_prediction_sample(test_df: pd.DataFrame, pred: List, model_name: str) -> None:
@@ -171,8 +229,12 @@ class Helper:
             ax.imshow(plt.imread(test_df.Filepath.iloc[i]))
             ax.set_title(f"True: {test_df.Label.iloc[i].split('_')[0]}\nPredicted: {pred[i].split('_')[0]}",
                          fontsize=15)
-        plt.tight_layout()
 
+            if pred[i].split('_')[0] != 'Q' and pred[i].split('_')[0] != 'X' and pred[i].split('_')[0] != 'nothing' and \
+                    pred[i].split('_')[0] != 'del' and pred[i].split('_')[0] != 'space'  and pred[i].split('_')[0] != 'W':
+                Helper.translate_prediction(test_df.Label.iloc[i].split('_')[0], 'tur', pred[i].split('_')[0])
+
+        plt.tight_layout()
         plt.savefig(
             str(Helper.get_project_root() / Helper.RESULT_FOLDER / Helper.PLOT_FOLDER / 'sample_predictions_{}.png'.format(
                 model_name)))

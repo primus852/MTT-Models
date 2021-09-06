@@ -34,10 +34,10 @@ class MTTModel:
 
     # Chosen by the Training of the "LongList"
     top_models = {
-        "MobileNet": {"model": tf.keras.applications.MobileNet, "perf": 0},
+        # "MobileNet": {"model": tf.keras.applications.MobileNet, "perf": 0},
         "MobileNetV2": {"model": tf.keras.applications.MobileNetV2, "perf": 0},
-        "DenseNet201": {"model": tf.keras.applications.DenseNet201, "perf": 0},
-        "ResNet50V2": {"model": tf.keras.applications.ResNet50V2, "perf": 0},
-        "Xception": {"model": tf.keras.applications.Xception, "perf": 0},
-        "VGG16": {"model": tf.keras.applications.VGG16, "perf": 0},
+        # "DenseNet201": {"model": tf.keras.applications.DenseNet201, "perf": 0},
+        # "ResNet50V2": {"model": tf.keras.applications.ResNet50V2, "perf": 0},
+        # "Xception": {"model": tf.keras.applications.Xception, "perf": 0},
+        # "VGG16": {"model": tf.keras.applications.VGG16, "perf": 0},
     }

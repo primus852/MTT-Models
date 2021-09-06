@@ -29,7 +29,6 @@ class MTTLongList:
             duration = perf_counter() - start
             duration = round(duration, 2)
             MTTModel.models[name]['perf'] = duration
-            print(f"{name:20} trained in {duration} sec")
 
             val_acc = history.history['val_accuracy']
             MTTModel.models[name]['val_acc'] = [round(v, 4) for v in val_acc]
@@ -38,9 +37,12 @@ class MTTLongList:
         models_result = []
 
         for name, v in MTTModel.models.items():
-            models_result.append([name, MTTModel.models[name]['val_acc'][-1], MTTModel.models[name]['perf']])
+            ratio = MTTModel.models[name]['val_acc'][-1] / MTTModel.models[name]['perf']
+            models_result.append([name, MTTModel.models[name]['val_acc'][-1], MTTModel.models[name]['perf'], ratio])
 
-        df_results = pd.DataFrame(models_result, columns=['model', 'val_accuracy', 'Training time (sec)'])
+        df_results = pd.DataFrame(models_result, columns=['model', 'val_accuracy', 'Training time (sec)', 'ratio'])
+        df_results['ratio_norm'] = (df_results['ratio'] - df_results['ratio'].min()) / (
+                df_results['ratio'].max() - df_results['ratio'].min())
         df_results.sort_values(by='val_accuracy', ascending=False, inplace=True)
         df_results.reset_index(inplace=True, drop=True)
 
@@ -49,3 +51,12 @@ class MTTLongList:
 
         # Plot Training Time
         Helper.plot_long_training_time(df_results)
+
+        # Resort by normalized ratio
+        df_results.sort_values(by='ratio_norm', ascending=False, inplace=True)
+        df_results.reset_index(inplace=True, drop=True)
+
+        # Print results to mention in paper
+        for idx, row in df_results.iterrows():
+            print(
+                f"{row['model']} trained in {row['Training time (sec)']} sec, accuracy was {row['val_accuracy']}. Ratio: {round(row['ratio'], 2)}, normalized Ratio: {round(row['ratio_norm'], 2)}")
